@@ -58,6 +58,19 @@ SPECIAL_RES_CLASSES = {
 # Media player name substitutes (for non-identical resclass/dbus-address pairs)
 MPS = {"banshee-1": "banshee"}
 
+FRENCH_NUMBER_KEYS = [
+    'ampersand',
+    'eacute',
+    'quotedbl',
+    'apostrophe',
+    'parenleft',
+    'minus',
+    'egrave',
+    'underscore',
+    'ccedilla',
+    'agrave'
+]
+
 class AboutDialog():
     __instance = None
 
@@ -1811,6 +1824,9 @@ class DockBar():
                      "gkeys_select_previous_window": \
                                 self.__select_previous_window_in_group}
         keyname = gtk.gdk.keyval_name(event.keyval)
+        #change french keyboard number keys to numbers
+        if keyname in FRENCH_NUMBER_KEYS:
+            keyname = str(FRENCH_NUMBER_KEYS.index(keyname) + 1)
         # Check if it's a number shortcut.
         if gtk.gdk.SUPER_MASK & event.state:
             keys = [str(n) for n in range(10)]
@@ -1864,6 +1880,27 @@ class DockBar():
                 break
 
     def __init_number_shortcuts(self, *args):
+        for i in FRENCH_NUMBER_KEYS:
+            key = "<super>" + i
+            if self.globals.settings["use_number_shortcuts"]:
+                try:
+                    success = keybinder.bind(key,
+                                         self.__on_number_shortcut_pressed, i)
+                except:
+                    success = False
+                if not success:
+                    # Keybinder sometimes doesn't unbind faulty binds.
+                    # We have to do it manually.
+                    try:
+                        keybinder.unbind(key)
+                    except:
+                        pass
+            else:
+                try:
+                    keybinder.unbind(key)
+                except:
+                    pass
+
         for i in range(10):
             key = "<super>%s" % i
             if self.globals.settings["use_number_shortcuts"]:
@@ -1886,6 +1923,9 @@ class DockBar():
                     pass
 
     def __on_number_shortcut_pressed(self, n, keyboard_grabbed=False):
+        if n in FRENCH_NUMBER_KEYS:
+            n = FRENCH_NUMBER_KEYS.index(n) + 1
+
         if n == 0:
             n = 10
         n -= 1
